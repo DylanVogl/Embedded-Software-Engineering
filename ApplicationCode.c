@@ -2,7 +2,7 @@
  * ApplicationCode.c
  *
  *  Created on: 04/27/2025
- *      Author: Dylan
+ *      Author: Dylan V
  */
 
 #include "ApplicationCode.h"
@@ -23,6 +23,9 @@ void ApplicationInit(void)
     LTCD_Layer_Init(0);
     buttonInit();
     timerInit();
+#if DROP_COLUMN_TOUCH_SELECTION == 0
+    gyroInit();
+#endif
     LCD_Clear(0,LCD_COLOR_WHITE);
 
     #if COMPILE_TOUCH_FUNCTIONS == 1
@@ -41,15 +44,14 @@ void buttonInit()
     Button_Init();  // Call the button initialization function
 }
 
-
 void timerInit()
 {
 	Timer_Init();
 }
 
-void LCD_Visual_Demo(void)
+void gyroInit()
 {
-	visualDemo();
+	Gyro_Init();
 }
 
 int gameEnd = 0;
@@ -113,10 +115,50 @@ void roundReset()
 	Timer_Reset();
 }
 
-#if COMPILE_TOUCH_FUNCTIONS == 1
-void LCD_Touch_Polling_Demo(void) {
+void gameModeDisplay()
+{
+	LCD_Clear(0, LCD_COLOR_GREEN);
+	LCD_SetFont(&Font16x24);
+	LCD_DisplayChar(75,65,'S');
+	LCD_DisplayChar(90,65,'i');
+	LCD_DisplayChar(105,65,'n');
+	LCD_DisplayChar(120,65,'g');
+	LCD_DisplayChar(135,65,'l');
+	LCD_DisplayChar(150,65,'e');
 
-    visualDemo();
+	LCD_DisplayChar(75,95,'P');
+	LCD_DisplayChar(90,95,'l');
+	LCD_DisplayChar(105,95,'a');
+	LCD_DisplayChar(120,95,'y');
+	LCD_DisplayChar(135,95,'e');
+	LCD_DisplayChar(150,95,'r');
+
+	LCD_DisplayChar(95,185,'T');
+	LCD_DisplayChar(110,185,'w');
+	LCD_DisplayChar(125,185,'o');
+
+	LCD_DisplayChar(75,215,'P');
+	LCD_DisplayChar(90,215,'l');
+	LCD_DisplayChar(105,215,'a');
+	LCD_DisplayChar(120,215,'y');
+	LCD_DisplayChar(135,215,'e');
+	LCD_DisplayChar(150,215,'r');
+
+	LCD_Draw_Vertical_Line(CENTER_BUTTON_BOUND_X1, SINGLEPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_LENGTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Vertical_Line(CENTER_BUTTON_BOUND_X2, SINGLEPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_LENGTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Horizontal_Line(CENTER_BUTTON_BOUND_X1, SINGLEPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_WIDTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Horizontal_Line(CENTER_BUTTON_BOUND_X1, SINGLEPLAYER_BUTTON_BOUND_Y2, GAMEMODE_BUTTON_WIDTH, LCD_COLOR_MAGENTA);
+
+	LCD_Draw_Vertical_Line(CENTER_BUTTON_BOUND_X1, TWOPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_LENGTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Vertical_Line(CENTER_BUTTON_BOUND_X2, TWOPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_LENGTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Horizontal_Line(CENTER_BUTTON_BOUND_X1, TWOPLAYER_BUTTON_BOUND_Y1, GAMEMODE_BUTTON_WIDTH, LCD_COLOR_MAGENTA);
+	LCD_Draw_Horizontal_Line(CENTER_BUTTON_BOUND_X1, TWOPLAYER_BUTTON_BOUND_Y2, GAMEMODE_BUTTON_WIDTH, LCD_COLOR_MAGENTA);
+}
+
+#if COMPILE_TOUCH_FUNCTIONS == 1
+void connectFour(void) {
+
+    gameModeDisplay();
     while (1)
     {
         // Retrieve touch data and update coordinates
@@ -128,7 +170,6 @@ void LCD_Touch_Polling_Demo(void) {
             if ((StaticTouchData.x >= CENTER_BUTTON_BOUND_X1) && (StaticTouchData.x <= CENTER_BUTTON_BOUND_X2) &&
                 (StaticTouchData.y >= SINGLEPLAYER_BUTTON_BOUND_Y1) && (StaticTouchData.y <= SINGLEPLAYER_BUTTON_BOUND_Y2))
             {
-
                 // Enter Single player mode
                 singlePlayerMode();
             }
@@ -268,27 +309,6 @@ void GameModeName(int gameMode)
 	LCD_DisplayChar(205,5,'y');
 	LCD_DisplayChar(220,5,'e');
 	LCD_DisplayChar(235,5,'r');
-}
-
-void displayUpdatedChipsAndBoard()
-{
-	for (int row = 0; row < ROWS; row++)
-	{
-		for (int col = 0; col < COLUMNS; col++)
-	    {
-			int player = gameBoard[row][col];
-	        if (player == 0) continue;
-            // Check and print for each color of chip
-            if (gameBoard[row][col] == 1)
-            {
-            	LCD_Draw_Circle_Fill(((col*COLUMN_WIDTH) - CHIP_OFFSET), ((row*ROW_HEIGHT) - CHIP_OFFSET + BOARD_TOPLINE), CHIP_RADIUS, LCD_COLOR_RED);
-            }
-            if(gameBoard[row][col] == 2)
-            {
-            	LCD_Draw_Circle_Fill(((col*COLUMN_WIDTH) - CHIP_OFFSET), ((row*ROW_HEIGHT) - CHIP_OFFSET + BOARD_TOPLINE), CHIP_RADIUS, LCD_COLOR_YELLOW);
-            }
-	    }
-	}
 }
 
 void placeChip(int column)
@@ -437,8 +457,6 @@ void displayEndScreen()
 		LCD_DisplayChar(125,85,'e');
 		LCD_DisplayChar(140,85,'!');
 	}
-
-
 	// Time of Round
 	LCD_DisplayChar(50,150,'T');
 	LCD_DisplayChar(65,150,'i');
@@ -589,6 +607,7 @@ void opponentMove()
     // Place the chip in the best column
     if (bestColumn != -1)
     {
+    	dropColumn = bestColumn;
         placeChip(bestColumn);
     }
 }
@@ -608,6 +627,9 @@ void singlePlayerMode()
 		{
 			opponentMove();
 			//displayUpdatedChipsAndBoard();
+			LCD_Draw_Circle_Fill(((dropColumn*COLUMN_WIDTH) + CHIP_OFFSET), CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+			HAL_Delay(750);
+			LCD_Draw_Circle_Fill(((dropColumn*COLUMN_WIDTH) + CHIP_OFFSET), CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
 		}
 		else
 		{
@@ -617,36 +639,61 @@ void singlePlayerMode()
 		}
 		while(!dropButtonPressed && currentPlayer == 1)
 		{
+#if DROP_COLUMN_TOUCH_SELECTION
 			if (returnTouchStateAndLocation(&StaticTouchData) == STMPE811_State_Pressed)
 			{
 				printf("\nX: %03d\nY: %03d\n", StaticTouchData.x, StaticTouchData.y);
 				// Check if the touch is within the move left button region
 				if ((StaticTouchData.x <= MOVE_LEFT_BUTTON_BOUND) && (dropColumn > 0))
 				{
-					// Move Chip Left
 					// Erase current chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
 					// Move chip left
 					currentX -= COLUMN_WIDTH;
 					dropColumn -= 1;
-					HAL_Delay(250);
 					// Draw new chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+					HAL_Delay(250);
 				}
 				// Check if the touch is within the move right button region
 				else if ((StaticTouchData.x >= MOVE_RIGHT_BUTTON_BOUND) && (dropColumn < 6))
 				{
-					// Move Chip Right
 					// Erase current chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
-					// Move chip left
+					// Move chip right
 					currentX += COLUMN_WIDTH;
 					dropColumn += 1;
-					HAL_Delay(250);
 					// Draw new chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+					HAL_Delay(250);
 				}
 			}
+#else
+			// Check if gyro left or right
+			if((Gyro_GetYAngle() <= -200) && (dropColumn > 0))
+			{
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
+				// Move chip left
+				currentX -= COLUMN_WIDTH;
+				dropColumn -= 1;
+				// Draw new chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+				HAL_Delay(750);
+				Gyro_ResetYAngle();
+			}
+			else if ((Gyro_GetYAngle() >= 200) && (dropColumn < 6))
+			{
+				// Erase current chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
+				// Move Chip Right
+				currentX += COLUMN_WIDTH;
+				dropColumn += 1;
+				// Draw new chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+				HAL_Delay(750);
+				Gyro_ResetYAngle();
+			}
+#endif
 		}
 		if (checkWinCondition())
 		{
@@ -687,36 +734,61 @@ void twoPlayerMode()
 
 		while(!dropButtonPressed)
 		{
+#if DROP_COLUMN_TOUCH_SELECTION
 			if (returnTouchStateAndLocation(&StaticTouchData) == STMPE811_State_Pressed)
 			{
 				printf("\nX: %03d\nY: %03d\n", StaticTouchData.x, StaticTouchData.y);
 				// Check if the touch is within the move left button region
 				if ((StaticTouchData.x <= MOVE_LEFT_BUTTON_BOUND) && (dropColumn > 0))
 				{
-					// Move Chip Left
 					// Erase current chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
 					// Move chip left
 					currentX -= COLUMN_WIDTH;
 					dropColumn -= 1;
-					HAL_Delay(250);
 					// Draw new chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+					HAL_Delay(250);
 				}
 				// Check if the touch is within the move right button region
 				else if ((StaticTouchData.x >= MOVE_RIGHT_BUTTON_BOUND) && (dropColumn < 6))
 				{
-					// Move Chip Right
 					// Erase current chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
-					// Move chip left
+					// Move chip right
 					currentX += COLUMN_WIDTH;
 					dropColumn += 1;
-					HAL_Delay(250);
 					// Draw new chip
 					LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+					HAL_Delay(250);
 				}
 			}
+#else
+			// Check if gyro left or right
+			if((Gyro_GetYAngle() <= -200) && (dropColumn > 0))
+			{
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
+				// Move chip left
+				currentX -= COLUMN_WIDTH;
+				dropColumn -= 1;
+				// Draw new chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+				HAL_Delay(750);
+				Gyro_ResetYAngle();
+			}
+			else if ((Gyro_GetYAngle() >= 200) && (dropColumn < 6))
+			{
+				// Erase current chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
+				// Move Chip Right
+				currentX += COLUMN_WIDTH;
+				dropColumn += 1;
+				// Draw new chip
+				LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, getCurrentPlayerColor(currentPlayer));
+				HAL_Delay(750);
+				Gyro_ResetYAngle();
+			}
+#endif
 		}
 		if (checkWinCondition())
 		{
@@ -738,7 +810,6 @@ void twoPlayerMode()
 		LCD_Draw_Circle_Fill(currentX, CHIP_PLACEMENT_ROW, CHIP_RADIUS, BACKGROUND_COLOR);
 		switchPlayer(); // Switch players
 		dropButtonPressed = 0;
-
 	}
 
 }
