@@ -33,7 +33,7 @@
 #define LCD_COLOR_CYAN          0x7FFF
 #define LCD_COLOR_YELLOW        0xFFE0
 
-/* Timing configuration from datahseet
+/* Timing configuration from datasheet
   HSYNC=10 (9+1)
   HBP=20 (29-10+1)
   ActiveW=240 (269-20-10+1)
@@ -53,6 +53,32 @@
 #define  LCD_PIXEL_WIDTH    ((uint16_t)240)
 #define  LCD_PIXEL_HEIGHT   ((uint16_t)320)
 #define  LCD_PIXELS		     ((uint32_t)LCD_PIXEL_WIDTH * (uint32_t)LCD_PIXEL_HEIGHT)
+
+#define CENTER_BUTTON_BOUND_X1 60
+#define CENTER_BUTTON_BOUND_X2 180
+#define SINGLEPLAYER_BUTTON_BOUND_Y1 60
+#define SINGLEPLAYER_BUTTON_BOUND_Y2 120
+#define TWOPLAYER_BUTTON_BOUND_Y1 180
+#define TWOPLAYER_BUTTON_BOUND_Y2 240
+#define GAMEMODE_BUTTON_WIDTH 120
+#define GAMEMODE_BUTTON_LENGTH 60
+
+#define COLUMN_WIDTH 34
+#define ROW_HEIGHT 34
+#define CHIP_RADIUS 12
+#define CHIP_OFFSET 17
+#define CHIP_PLACEMENT_ROW 65
+#define BOARD_TOPLINE 116
+#define CONNECT4_BOARD_HEIGHT 204
+#define CONNECT4_BOARD_WIDTH 240
+#define ROWS 6
+#define COLUMNS 7
+
+#define MOVE_LEFT_BUTTON_BOUND 85
+#define MOVE_RIGHT_BUTTON_BOUND 155
+
+#define BACKGROUND_COLOR LCD_COLOR_GREEN
+
 
 void LTCD__Init(void);
 void LTCD_Layer_Init(uint8_t LayerIndex);
@@ -74,15 +100,12 @@ void LCD_Clear(uint8_t LayerIndex, uint16_t Color);
 
 void LCD_Error_Handler(void);
 
-// Demo using provided functions
-void visualDemo(void);
 
 void LCD_Error_Handler(void);
 
 #if COMPILE_TOUCH_FUNCTIONS == 1
 void InitializeLCDTouch(void);
 STMPE811_State_t returnTouchStateAndLocation(STMPE811_TouchData * touchStruct);
-void LCD_Touch_Polling_Demo(void);
 void DetermineTouchPosition(STMPE811_TouchData * touchStruct);
 uint8_t ReadRegisterFromTouchModule(uint8_t RegToRead);
 void WriteDataToTouchModule(uint8_t RegToWrite, uint8_t writeData);
