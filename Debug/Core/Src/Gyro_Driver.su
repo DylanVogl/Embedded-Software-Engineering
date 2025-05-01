@@ -1,0 +1,10 @@
+../Core/Src/Gyro_Driver.c:18:6:Gyro_Init	40	static
+../Core/Src/Gyro_Driver.c:85:6:Gyro_GetDeviceID	16	static
+../Core/Src/Gyro_Driver.c:91:9:Gyro_GetYAngle	24	static
+../Core/Src/Gyro_Driver.c:105:6:Gyro_ResetYAngle	4	static
+../Core/Src/Gyro_Driver.c:111:6:Gyro_PowerOn	8	static
+../Core/Src/Gyro_Driver.c:117:6:Gyro_ConfigureRegister	24	static
+../Core/Src/Gyro_Driver.c:135:9:Gyro_ReadRegister	32	static
+../Core/Src/Gyro_Driver.c:159:6:Gyro_VerifyHALStatus	8	static
+../Core/Src/Gyro_Driver.c:170:6:Gyro_EnableSlaveCommunication	8	static
+../Core/Src/Gyro_Driver.c:177:6:Gyro_DisableSlaveCommunication	8	static

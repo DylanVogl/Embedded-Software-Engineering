@@ -1,0 +1,6 @@
+../Core/Src/Timer_Driver.c:10:6:Timer_Init	16	static
+../Core/Src/Timer_Driver.c:28:6:Timer_Start	8	static
+../Core/Src/Timer_Driver.c:33:6:Timer_Stop	8	static
+../Core/Src/Timer_Driver.c:38:6:Timer_Reset	4	static
+../Core/Src/Timer_Driver.c:43:5:Timer_getTime	16	static
+../Core/Src/Timer_Driver.c:49:5:Timer_ElapsedTime	24	static
